@@ -6,6 +6,7 @@ import static org.junit.Assert.*;
 import org.junit.*;
 
 import com.priceminister.account.implementation.*;
+import org.omg.CORBA.DoubleHolder;
 
 
 /**
@@ -19,9 +20,11 @@ import com.priceminister.account.implementation.*;
  * 
  */
 public class CustomerAccountTest {
-    
+
     Account customerAccount;
     AccountRule rule;
+
+    private static final double DELTA = 0.00000001;
 
     /**
      * @throws java.lang.Exception
@@ -31,12 +34,18 @@ public class CustomerAccountTest {
         customerAccount = new CustomerAccount();
     }
     
-    /**
-     * Tests that an empty account always has a balance of 0.0, not a NULL.
-     */
     @Test
-    public void testAccountWithoutMoneyHasZeroBalance() {
-        fail("not yet implemented");
+    public void newAccountHasNotNullBalance() {
+        Double result = customerAccount.getBalance();
+
+        assertNotNull(result);
+    }
+
+    @Test
+    public void newAccountHasZeroBalance() {
+        Double result = customerAccount.getBalance();
+
+        assertEquals(0, result, DELTA);
     }
     
     /**
@@ -44,9 +53,23 @@ public class CustomerAccountTest {
      */
     @Test
     public void testAddPositiveAmount() {
-        fail("not yet implemented");
+        double amount = 10.0;
+
+        customerAccount.add(amount);
+
+        assertEquals(amount, customerAccount.getBalance(), DELTA);
     }
-    
+
+    @Test
+    public void testAddNegativeAmount() {
+        double amount = -10.0;
+
+        Double before = customerAccount.getBalance();
+        customerAccount.add(amount);
+        Double after = customerAccount.getBalance();
+
+        assertEquals(before, after, DELTA);
+    }
     /**
      * Tests that an illegal withdrawal throws the expected exception.
      * Use the logic contained in CustomerAccountRule; feel free to refactor the existing code.
