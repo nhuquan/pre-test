@@ -3,6 +3,7 @@ package com.priceminister.account;
 
 import static org.junit.Assert.*;
 
+import com.sun.org.apache.bcel.internal.generic.DLOAD;
 import org.junit.*;
 
 import com.priceminister.account.implementation.*;
@@ -32,27 +33,27 @@ public class CustomerAccountTest {
     @Before
     public void setUp() throws Exception {
         customerAccount = new CustomerAccount();
+        rule = new CustomerAccountRule();
     }
-    
+
+    //================== getBalance() =======================================//
     @Test
-    public void newAccountHasNotNullBalance() {
+    public void getBalance_newAccountHasNotNullBalance() {
         Double result = customerAccount.getBalance();
 
         assertNotNull(result);
     }
 
     @Test
-    public void newAccountHasZeroBalance() {
+    public void getBalance_newAccountHasZeroBalance() {
         Double result = customerAccount.getBalance();
 
         assertEquals(0, result, DELTA);
     }
     
-    /**
-     * Adds money to the account and checks that the new balance is as expected.
-     */
+    //================== add() =======================================//
     @Test
-    public void testAddPositiveAmount() {
+    public void add_PositiveAmount() {
         double amount = 10.0;
 
         customerAccount.add(amount);
@@ -60,25 +61,60 @@ public class CustomerAccountTest {
         assertEquals(amount, customerAccount.getBalance(), DELTA);
     }
 
-    @Test
-    public void testAddNegativeAmount() {
+    @Test(expected = IllegalArgumentException.class)
+    public void add_NegativeAmount()  {
         double amount = -10.0;
 
-        Double before = customerAccount.getBalance();
         customerAccount.add(amount);
-        Double after = customerAccount.getBalance();
+    }
 
-        assertEquals(before, after, DELTA);
-    }
-    /**
-     * Tests that an illegal withdrawal throws the expected exception.
-     * Use the logic contained in CustomerAccountRule; feel free to refactor the existing code.
-     */
+    //================== withdraw() =======================================//
     @Test
-    public void testWithdrawAndReportBalanceIllegalBalance() {
-        fail("not yet implemented");
+    public void withdrawAndReportBalance_normal() {
+        AccountRule non_negative_balance = new CustomerAccountRule();
+
+        customerAccount.add(20.0);
+
+        try {
+            customerAccount.withdrawAndReportBalance(10.0, non_negative_balance);
+        } catch (Exception e) {
+            fail();
+        }
+
+        assertEquals(customerAccount.getBalance(), 10.0, DELTA);
     }
-    
-    // Also implement missing unit tests for the above functionalities.
+
+    @Test
+    public void withdrawAndReportBalance_toZero() {
+        AccountRule non_negative_balance = new CustomerAccountRule();
+        customerAccount.add(20.0);
+
+        try {
+            customerAccount.withdrawAndReportBalance(20.0, non_negative_balance);
+        } catch (Exception ee) {
+            fail();
+        }
+
+        assertEquals(customerAccount.getBalance(), 0, DELTA);
+    }
+
+    @Test (expected = IllegalArgumentException.class)
+    public void withdrawAndReportBalance_negative() {
+        customerAccount.add(20.0);
+
+        try {
+            customerAccount.withdrawAndReportBalance(-1.0, rule);
+        } catch (IllegalBalanceException ee) {
+            fail();
+        }
+
+        assertEquals(customerAccount.getBalance(), 0, DELTA);
+    }
+
+    @Test (expected = IllegalBalanceException.class)
+    public void withdrawAndReportBalance_IllegalBalance() throws IllegalBalanceException {
+        customerAccount.add(10.0);
+        customerAccount.withdrawAndReportBalance(20.0, rule);
+    }
 
 }
